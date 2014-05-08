@@ -4,14 +4,21 @@
 		<title>Knowledge Bowl Scoreboard</title>
 
 		<link rel="stylesheet" type="text/css" href="./lib/bootstrap.min.css">
+		<link rel="stylesheet" type="text/css" href="./style.css">
 	</head>
 	<body>
 		<script data-template-name="application" type="text/x-handlebars">
-			{{outlet bracketCreation}}
-			<hr>
-			{{outlet bracket}}
-			<hr>
-			{{outlet match}}
+			<div class="container">
+				{{outlet bracketCreation}}
+				<div class="row">
+					<div id="bracket" class="col-xs-8">
+					{{outlet bracket}}
+					</div>
+					<div id="match" class="col-xs-4">
+					{{outlet match}}
+					</div>
+				</div>
+			</div>
 		</script>
 
 		<script data-template-name="bracketCreation" type="text/x-handlebars">
@@ -20,9 +27,14 @@
 
 		<script data-template-name="bracket" type="text/x-handlebars">
 			<h1>Bracket:</h1>
-			{{outlet currentRound}}
-			<hr>
-			{{outlet nextRound}}
+			<div class="row">
+				<div class="col-xs-6">
+				{{outlet currentRound}}
+				</div>
+				<div class="col-xs-6">
+				{{outlet nextRound}}
+				</div>
+			</div>
 		</script>
 
 		<script data-template-name="round" type="text/x-handlebars">
