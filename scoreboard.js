@@ -37,7 +37,11 @@ App.Round = DS.Model.extend({
 	matches: DS.hasMany("match")
 });
 
-App.ApplicationRoute = Ember.Route.extend({});
+App.ApplicationRoute = Ember.Route.extend({
+	beforeModel: function() {
+		this.transitionTo("bracketCreation");
+	}
+});
 
 App.BracketCreationRoute = Ember.Route.extend({
 	renderTemplate: function() {
