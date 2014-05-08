@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Knowledge Bowl Scoreboard</title>
+
+		<link rel="stylesheet" type="text/css" href="./lib/bootstrap.min.css">
+	</head>
+	<body>
+		<script data-template-name="application" type="text/x-handlebars">
+			{{outlet bracketCreation}}
+			<hr>
+			{{outlet bracket}}
+			<hr>
+			{{outlet match}}
+		</script>
+
+		<script data-template-name="bracketCreation" type="text/x-handlebars">
+			<button {{action "createBracket" 3}}>Create Bracket</button>
+		</script>
+
+		<script data-template-name="bracket" type="text/x-handlebars">
+			<h1>Bracket:</h1>
+			{{outlet currentRound}}
+			<hr>
+			{{outlet nextRound}}
+		</script>
+
+		<script data-template-name="round" type="text/x-handlebars">
+			<h3>Round {{id}}</h3>
+			{{#each match in matches}}
+				{{#with match}}
+					<p>{{firstTeam.name}} - {{firstTeamScore}}</p>
+					<p>{{secondTeam.name}} - {{secondTeamScore}}</p>
+					<p>Finalized: {{finalized}}</p>
+				{{/with}}
+				{{#link-to "match" match}}Play{{/link-to}}
+				<hr>
+			{{/each}}
+		</script>
+
+		<script data-template-name="match" type="text/x-handlebars">
+		<h1>Current Match</h1>
+		<p>{{firstTeam.name}} - {{firstTeamScore}} <button {{action "incrementScore" 0}}>+</button></p>
+		<p>vs.</p>
+		<p>{{secondTeam.name}} - {{secondTeamScore}} <button {{action "incrementScore" 1}}>+</button></p>
+		<p>winner: {{winner.name}}</p>
+		<button {{action "finalize" id}}>Finalize {{finalized}}</button>
+		</script>
+
+		<script type="text/javascript" src="./lib/jquery-1.11.0.js"></script>
+		<script type="text/javascript" src="./lib/handlebars-1.1.2.js"></script>
+		<script type="text/javascript" src="./lib/ember-1.4.0.js"></script>
+		<script type="text/javascript" src="./lib/ember-data-1.0.0-beta7.js"></script>
+		<script type="text/javascript" src="./scoreboard.js"></script>
+	</body>
+</html>
