@@ -2,10 +2,8 @@ var App = Ember.Application.create();
 
 App.Router.map(function() {
 	this.route("bracketCreation", {path: "/create-bracket"});
-	this.resource("bracket", {path: "/bracket"}, function() {
-		this.resource("round", {path: "/round/:round_id"}, function() {
-			this.resource("match", {path: "/match/:match_id"});
-		});
+	this.resource("round", {path: "/round/:round_id"}, function() {
+		this.resource("match", {path: "/match/:match_id"});
 	});
 });
 
@@ -58,6 +56,8 @@ App.BracketCreationRoute = Ember.Route.extend({
 			//TODO figure out better structure for bracket generation
 			self.controller.buildBracket(tempNumRounds)
 			.then(function() {
+				self.controllerFor("bracket").set("numRounds", tempNumRounds);
+
 				//goes to the first round
 				self.transitionTo("round", 1);
 			});
@@ -138,14 +138,6 @@ App.BracketCreationController = Ember.Controller.extend({
 	}
 });
 
-App.BracketRoute = Ember.Route.extend({
-	renderTemplate: function() {
-		this.render("bracket", {
-			outlet: "bracket"
-		});
-	}
-});
-
 App.RoundRoute = Ember.Route.extend({
 	renderTemplate: function() {
 		this.render("round", {
@@ -172,8 +164,30 @@ App.RoundRoute = Ember.Route.extend({
 		self.store.find("round", Number(currentRound.get("id")) + 1)
 		.then(function(nextRound) {
 			self.controllerFor("nextRound").set("model", nextRound);
+		}, function(err) {
+			self.controllerFor("nextRound").set("model", null);
 		});
 	}
+});
+
+App.BracketController = Ember.Controller.extend({
+	needs: "currentRound",
+	_currentRound: Ember.computed.alias("controllers.currentRound"),
+	currentRound: function() {
+		return Number(this.get("_currentRound.id"));
+	}.property("_currentRound.id"),
+	nextRound: function() {
+		return this.get("currentRound") + 1;
+	}.property("currentRound"),
+	previousRound: function() {
+		return this.get("currentRound") - 1;
+	}.property("currentRound"),
+	isFirstRound: function() {
+		return this.get("currentRound") === 1;
+	}.property("currentRound"),
+	isSecondToLastRound: function() {
+		return this.get("currentRound") + 1 == this.get("numRounds");
+	}.property("currentRound"),
 });
 
 App.CurrentRoundController = Ember.ObjectController.extend();
@@ -192,6 +206,7 @@ App.MatchRoute = Ember.Route.extend({
 
 App.MatchController = Ember.ObjectController.extend({
 	actions: {
+		//better way of specifying team
 		incrementScore: function(team) {
 			if (team === 0)
 				this.incrementProperty("firstTeamScore");
@@ -199,16 +214,27 @@ App.MatchController = Ember.ObjectController.extend({
 				this.incrementProperty("secondTeamScore");
 		},
 		decrementScore: function(team) {
-
+			if (team === 0)
+				this.decrementProperty("firstTeamScore");
+			else if (team === 1)
+				this.decrementProperty("secondTeamScore");
 		},
 		finalize: function(finalizedMatchId) {
 			this.set("finalized", true);
 
+			//TODO make better way of placing team in next round
+			//(maybe based on match id being odd or even?)
 			var nextRoundMatch = this.get("nextRoundMatch");
 			if (!nextRoundMatch.get("firstTeam"))
 				nextRoundMatch.set("firstTeam", this.get("winner"));
 			else if (!nextRoundMatch.get("secondTeam"))
 				nextRoundMatch.set("secondTeam", this.get("winner"));
 		}
+	}
+});
+
+App.TeamController = Ember.ObjectController.extend({
+	actions: {
+
 	}
 });

@@ -12,7 +12,7 @@
 				{{outlet bracketCreation}}
 				<div class="row">
 					<div id="bracket" class="col-xs-8">
-					{{outlet bracket}}
+					{{render "bracket"}}
 					</div>
 					<div id="match" class="col-xs-4">
 					{{outlet match}}
@@ -27,6 +27,8 @@
 
 		<script data-template-name="bracket" type="text/x-handlebars">
 			<h1>Bracket:</h1>
+			{{#unless isFirstRound}}{{#link-to "round" previousRound}}&lt;-{{/link-to}}{{/unless}}
+			{{#unless isSecondToLastRound}}{{#link-to "round" nextRound}}-&gt;{{/link-to}}{{/unless}}
 			<div class="row">
 				<div class="col-xs-6">
 				{{outlet currentRound}}
@@ -38,7 +40,7 @@
 		</script>
 
 		<script data-template-name="round" type="text/x-handlebars">
-			<h3>Round {{id}}</h3>
+			{{#if model}}<h3>Round {{id}}</h3>{{/if}}
 			{{#each match in matches}}
 				{{#with match}}
 					<p>{{firstTeam.name}} - {{firstTeamScore}}</p>
@@ -52,11 +54,18 @@
 
 		<script data-template-name="match" type="text/x-handlebars">
 		<h1>Current Match</h1>
+		{{render "team" firstTeam}}
 		<p>{{firstTeam.name}} - {{firstTeamScore}} <button {{action "incrementScore" 0}}>+</button></p>
 		<p>vs.</p>
 		<p>{{secondTeam.name}} - {{secondTeamScore}} <button {{action "incrementScore" 1}}>+</button></p>
 		<p>winner: {{winner.name}}</p>
 		<button {{action "finalize" id}}>Finalize {{finalized}}</button>
+		</script>
+
+		<script data-template-name="team" type="text/x-handlebars">
+			<p>{{name}} - {{firstTeamScore}}
+				<button {{action "incrementScore"}}>+</button>
+				<button {{action "decrementScore"}}>+</button></p>
 		</script>
 
 		<script type="text/javascript" src="./lib/jquery-1.11.0.js"></script>
