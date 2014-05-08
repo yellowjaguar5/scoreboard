@@ -70,11 +70,11 @@ App.BracketCreationController = Ember.Controller.extend({
 		var store = this.store;
 
 		var generateBracket = function(currRound, nextRoundMatch) {
-			return new Promise(function(resolve, reject) {
+			return new Ember.RSVP.Promise(function(resolve, reject) {
 				if (currRound <= 0) {
 					resolve();
 				} else {
-					new Promise(function(resolve, reject) {
+					new Ember.RSVP.Promise(function(resolve, reject) {
 						store.find("round", currRound)
 							.then(function(currRoundObj) {
 								resolve(currRoundObj);
@@ -115,7 +115,7 @@ App.BracketCreationController = Ember.Controller.extend({
 		};
 
 		var populateBracket = function() {
-			return new Promise(function(resolve, reject) {
+			return new Ember.RSVP.Promise(function(resolve, reject) {
 				store.find("round", 1)
 				.then(function(firstRound) {
 					var numMatches = 0;
@@ -130,7 +130,7 @@ App.BracketCreationController = Ember.Controller.extend({
 			});
 		};
 
-		return new Promise(function(resolve, reject) {
+		return new Ember.RSVP.Promise(function(resolve, reject) {
 			generateBracket(numRounds, null)
 			.then(populateBracket)
 			.then(resolve);
