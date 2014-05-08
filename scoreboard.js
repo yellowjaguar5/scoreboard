@@ -53,8 +53,10 @@ App.BracketCreationRoute = Ember.Route.extend({
 		createBracket: function(numRounds) {
 			var self = this;
 
+			var tempNumRounds = prompt("Enter a number of rounds:");
+
 			//TODO figure out better structure for bracket generation
-			self.controller.buildBracket(numRounds)
+			self.controller.buildBracket(tempNumRounds)
 			.then(function() {
 				//goes to the first round
 				self.transitionTo("round", 1);
