@@ -9,69 +9,102 @@
 	<body>
 		<script data-template-name="application" type="text/x-handlebars">
 			<div class="container">
-				{{outlet bracketCreation}}
 				<div class="row">
-					<div id="bracket" class="col-xs-8">
-					{{render "bracket"}}
-					</div>
-					<div id="match" class="col-xs-4">
-					{{outlet match}}
-					</div>
+					{{outlet}}
 				</div>
 			</div>
 		</script>
 
 		<script data-template-name="bracketCreation" type="text/x-handlebars">
-			<button {{action "createBracket"}}>Create Bracket</button>
+			<div id="bracket-creation-modal" class="modal fade" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+			  <div class="modal-dialog">
+			    <div class="modal-content">
+			      <div class="modal-header">
+			        <h4 class="modal-title">Configure Bracket</h4>
+			      </div>
+			      <div class="modal-body">
+			        <p>Number of Rounds: {{input type="text" value=numRounds}}</p>
+			      </div>
+			      <div class="modal-footer">
+			        <button {{action "createBracket"}}>Create Bracket</button>
+			      </div>
+			    </div>
+			  </div>
+			</div>
 		</script>
 
 		<script data-template-name="bracket" type="text/x-handlebars">
-			<h1>Bracket:</h1>
-			{{#unless isFirstRound}}{{#link-to "round" previousRound}}&lt;-{{/link-to}}{{/unless}}
-			{{#unless isSecondToLastRound}}{{#link-to "round" nextRound}}-&gt;{{/link-to}}{{/unless}}
-			<div class="row">
-				<div class="col-xs-6">
-				{{outlet currentRound}}
+			<div id="bracket" class="col-xs-6">
+				<h1>Bracket:</h1>
+				{{#link-to "round" previousRound disabled=isFirstRound}}&lt;-{{/link-to}}
+				{{#link-to "round" nextRound disabled=isSecondToLastRound}}-&gt;{{/link-to}}
+				<div class="row">
+					<div class="col-xs-6">
+					{{outlet currentRound}}
+					</div>
+					<div class="col-xs-6">
+					{{outlet nextRound}}
+					</div>
 				</div>
-				<div class="col-xs-6">
-				{{outlet nextRound}}
-				</div>
+			</div>
+			<div id="match" class="col-xs-6">
+			{{outlet match}}
 			</div>
 		</script>
 
 		<script data-template-name="round" type="text/x-handlebars">
 			{{#if model}}<h3>Round {{id}}</h3>{{/if}}
 			{{#each match in matches}}
-				{{#with match}}
-					<p>{{firstTeam.name}} - {{firstTeamScore}}</p>
-					<p>{{secondTeam.name}} - {{secondTeamScore}}</p>
-					<p>Finalized: {{finalized}}</p>
-				{{/with}}
-				{{#link-to "match" match}}Play{{/link-to}}
+				{{render "bracketMatch" match}}
 				<hr>
 			{{/each}}
 		</script>
 
-		<script data-template-name="match" type="text/x-handlebars">
-		<h1>Current Match</h1>
-		{{render "team" firstTeam}}
-		<p>{{firstTeam.name}} - {{firstTeamScore}} <button {{action "incrementScore" 0}}>+</button></p>
-		<p>vs.</p>
-		<p>{{secondTeam.name}} - {{secondTeamScore}} <button {{action "incrementScore" 1}}>+</button></p>
-		<p>winner: {{winner.name}}</p>
-		<button {{action "finalize" id}}>Finalize {{finalized}}</button>
+		<script data-template-name="bracketMatch" type="text/x-handlebars">
+			<p>{{#if editingFirstTeamName}}
+					<a {{action "toggleEditing" 2}}>save</a> 
+					{{input type="text" value=firstTeam.name}}
+				{{else}}
+					{{#if isFirstRound}}<a {{action "toggleEditing" 0}}>edit</a>{{/if}}
+					{{#if firstTeam}} 
+						{{firstTeam.name}}
+					{{else}}
+						<em>Undecided</em>
+					{{/if}}
+				{{/if}} - {{firstTeamScore}}</p>
+			<p>{{#if editingSecondTeamName}}
+					<a {{action "toggleEditing" 2}}>save</a> 
+					{{input type="text" value=secondTeam.name}}
+				{{else}}
+					{{#if isFirstRound}}<a {{action "toggleEditing" 1}}>edit</a>{{/if}} 
+					{{#if secondTeam}} 
+						{{secondTeam.name}}
+					{{else}}
+						<em>Undecided</em>
+					{{/if}}
+				{{/if}} - {{secondTeamScore}}</p>
+			<p>Finalized: {{finalized}}</p>
+			{{#link-to "match" model disabled=notPlayable}}Play{{/link-to}}
 		</script>
 
-		<script data-template-name="team" type="text/x-handlebars">
-			<p>{{name}} - {{firstTeamScore}}
-				<button {{action "incrementScore"}}>+</button>
-				<button {{action "decrementScore"}}>+</button></p>
+		<script data-template-name="match" type="text/x-handlebars">
+		<h1>Current Match</h1>
+		<p>{{firstTeam.name}} - {{firstTeamScore}}
+			<button {{action "incrementScore" 0}}>+</button>
+			<button {{action "decrementScore" 0}} {{bind-attr disabled=firstTeamScoreIsZero}}>-</button></p>
+		<p>vs.</p>
+		<p>{{secondTeam.name}} - {{secondTeamScore}}
+			<button {{action "incrementScore" 1}}>+</button>
+			<button {{action "decrementScore" 1}} {{bind-attr disabled=secondTeamScoreIsZero}}>-</button></p>
+		<p>winner: {{winner.name}}</p>
+		<button {{action "finalize" id}} {{bind-attr disabled=winnerExists}}>Finalize {{finalized}}</button>
 		</script>
 
 		<script type="text/javascript" src="./lib/jquery-1.11.0.js"></script>
 		<script type="text/javascript" src="./lib/handlebars-1.1.2.js"></script>
 		<script type="text/javascript" src="./lib/ember-1.4.0.js"></script>
 		<script type="text/javascript" src="./lib/ember-data-1.0.0-beta7.js"></script>
+		<script type="text/javascript" src="./lib/bootstrap.min.js"></script>
 		<script type="text/javascript" src="./scoreboard.js"></script>
 	</body>
 </html>
