@@ -136,7 +136,7 @@
 			<button {{action "incrementScore" 1}}>+</button>
 			<button {{action "decrementScore" 1}} {{bind-attr disabled=secondTeamScoreIsZero}}>-</button></p>
 		<p>winner: {{winner.name}}</p>
-		<button {{action "finalize" id}} {{bind-attr disabled=winnerExists}}>Finalize {{finalized}}</button>
+		<button {{action "finalize" id}} {{bind-attr disabled=finalized}}>Finalize {{finalized}}</button>
 		</script>
 
 		<script type="text/javascript" src="./lib/jquery-1.11.0.js"></script>

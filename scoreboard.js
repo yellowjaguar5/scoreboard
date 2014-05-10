@@ -235,16 +235,12 @@ App.MatchController = Ember.ObjectController.extend({
 	scoreIsZero: function(team) {
 		return this.get(team + "Score") == 0;
 	},
-	test: true,
 	firstTeamScoreIsZero: function() {
 		return this.scoreIsZero("firstTeam");
 	}.property("firstTeamScore"),
 	secondTeamScoreIsZero: function() {
 		return this.scoreIsZero("secondTeam");
 	}.property("secondTeamScore"),
-	winnerExists: function() {
-		return this.get("winner") === null;
-	}.property("winner"),
 	actions: {
 		//better way of specifying team
 		incrementScore: function(teamEnum) {
