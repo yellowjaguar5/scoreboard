@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Knowledge Bowl Scoreboard</title>
+		<title>Scoreboard</title>
 
 		<link rel="stylesheet" type="text/css" href="./lib/bootstrap.min.css">
 		<link rel="stylesheet" type="text/css" href="./style.css">
@@ -22,12 +22,51 @@
 			      <div class="modal-header">
 			        <h4 class="modal-title">Configure Bracket</h4>
 			      </div>
-			      <div class="modal-body">
-			        <p>Number of Rounds: {{input type="text" value=numRounds}}</p>
-			      </div>
-			      <div class="modal-footer">
-			        <button {{action "createBracket"}}>Create Bracket</button>
-			      </div>
+			      	<form {{action "createBracket" on="submit"}}>
+					    <div class="modal-body">
+					      	
+					      	<div class="form-group">
+					        	<label for="numRounds">Number of Rounds</label>
+					        	<div>
+					        	{{input type="text"
+					        			name="numRounds"
+					        			value=numRounds
+					        			class="form-control"}}
+					        	</div>
+					        <div>
+
+					        <br>
+
+					        <div class="form-group">
+					        	<div class="checkbox">
+					        		<label>
+					        			Include Bonus Round
+					        			{{input type="checkbox"
+						        			name="bonusRoundToggle"
+						        			checked=bonusRound
+						        			}}
+						        	</label>
+					        	</div>
+					        <div>
+
+					        {{#if bonusRound}}
+					        <div class="form-group">
+					        	<label for="bonusTeamName" class="">Bonus Round Team Name</label>
+					        	<div>
+					        	{{input type="text"
+					        			name="bonusTeamName"
+					        			value=bonusTeamName
+					        			class="form-control"}}
+					        	</div>
+					      	</div>
+					      	{{/if}}
+					    </div>
+					    <div class="modal-footer">
+					      	<div class="form-group">
+							    <button type="submit" class="btn btn-primary">Create Bracket</button>
+						    </div>	   
+					    </div>
+				    </form>
 			    </div>
 			  </div>
 			</div>
