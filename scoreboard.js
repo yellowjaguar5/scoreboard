@@ -18,6 +18,7 @@ App.Team = DS.Model.extend({
 App.Match = DS.Model.extend({
 	round: DS.belongsTo("round"),
 	nextRoundMatch: DS.belongsTo("match"),
+	nextRoundMatchSpot: DS.attr("string"),
 	firstTeam: DS.belongsTo("team"),
 	firstTeamScore: DS.attr("number"),
 	secondTeam: DS.belongsTo("team"),
@@ -38,7 +39,7 @@ App.Round = DS.Model.extend({
 });
 
 App.ApplicationRoute = Ember.Route.extend({
-	afterModel: function() {
+	beforeModel: function() {
 		this.transitionTo("bracketCreation");
 	}
 });
@@ -73,7 +74,7 @@ App.BracketCreationController = Ember.Controller.extend({
 	buildBracket: function(numRounds) {
 		var store = this.store;
 
-		var generateBracket = function(currRound, nextRoundMatch) {
+		var generateBracket = function(currRound, nextRoundMatch, nextRoundMatchSpot) {
 			return new Ember.RSVP.Promise(function(resolve, reject) {
 				if (currRound <= 0) {
 					resolve();
@@ -96,6 +97,7 @@ App.BracketCreationController = Ember.Controller.extend({
 							id: Math.round(Math.random()*1000),
 							round: currRoundObj,
 							nextRoundMatch: nextRoundMatch,
+							nextRoundMatchSpot: nextRoundMatchSpot,
 							firstTeamScore: 0,
 							secondTeamScore: 0,
 							finalized: false
@@ -103,8 +105,8 @@ App.BracketCreationController = Ember.Controller.extend({
 
 						currRoundObj.get("matches").pushObject(newMatch);
 
-						Ember.RSVP.all([generateBracket(currRound - 1, newMatch),
-										generateBracket(currRound - 1, newMatch)]).then(resolve);
+						Ember.RSVP.all([generateBracket(currRound - 1, newMatch, "first"),
+										generateBracket(currRound - 1, newMatch, "second")]).then(resolve);
 					});
 				}
 			});
@@ -178,6 +180,10 @@ App.RoundRoute = Ember.Route.extend({
 			controller: "nextRound"
 		});
 	},
+	afterModel: function(round, transition) {
+		if (round.get("id") >= this.controllerFor("bracket").get("numRounds"))
+			this.transitionTo("round", round.get("id") - 1);
+	},
 	model: function(params) {
 		return this.store.find("round", params.round_id);
 	},
@@ -193,6 +199,12 @@ App.RoundRoute = Ember.Route.extend({
 		}, function(err) {
 			self.controllerFor("nextRound").set("model", null);
 		});
+	},
+	actions: {
+		play: function(match) {
+			if (match.get("firstTeam") && match.get("secondTeam"))
+				this.transitionTo("match", match);
+		}
 	}
 });
 
@@ -200,12 +212,15 @@ App.CurrentRoundController = Ember.ObjectController.extend();
 App.NextRoundController = Ember.ObjectController.extend();
 
 App.BracketMatchController = Ember.ObjectController.extend({
-	notPlayable: function() {
-		return !(this.get("firstTeam") && this.get("secondTeam"));
-	}.property("firstTeam", "secondTeam"),
 	isFirstRound: function() {
 		return this.get("round.id") == 1;
 	}.property("round.id"),
+	firstTeamWon: function() {
+		return this.get("finalized") && (this.get("winner") === this.get("firstTeam"));
+	}.property("finalized", "winner"),
+	secondTeamWon: function() {
+		return this.get("finalized") && (this.get("winner") === this.get("secondTeam"));
+	}.property("finalized", "winner"),
 	editing: 2,
 	editingFirstTeamName: function() {
 		return this.get("editing") == 0;
@@ -233,14 +248,17 @@ App.MatchRoute = Ember.Route.extend({
 
 App.MatchController = Ember.ObjectController.extend({
 	scoreIsZero: function(team) {
-		return this.get(team + "Score") == 0;
+		return this.get(team + "TeamScore") == 0;
 	},
-	firstTeamScoreIsZero: function() {
-		return this.scoreIsZero("firstTeam");
-	}.property("firstTeamScore"),
-	secondTeamScoreIsZero: function() {
-		return this.scoreIsZero("secondTeam");
-	}.property("secondTeamScore"),
+	finalizedOrFirstTeamScoreIsZero: function() {
+		return this.scoreIsZero("first") || this.get("finalized");
+	}.property("firstTeamScore", "finalized"),
+	finalizedOrSecondTeamScoreIsZero: function() {
+		return this.scoreIsZero("second") || this.get("finalized");
+	}.property("secondTeamScore", "finalized"),
+	finalizedOrTie: function() {
+		return this.get("finalized") || this.get("winner") === null;
+	}.property("winner", "finalized"),
 	actions: {
 		//better way of specifying team
 		incrementScore: function(teamEnum) {
@@ -256,11 +274,7 @@ App.MatchController = Ember.ObjectController.extend({
 
 			//TODO make better way of placing team in next round
 			//(maybe based on match id being odd or even?)
-			var nextRoundMatch = this.get("nextRoundMatch");
-			if (!nextRoundMatch.get("firstTeam"))
-				nextRoundMatch.set("firstTeam", this.get("winner"));
-			else if (!nextRoundMatch.get("secondTeam"))
-				nextRoundMatch.set("secondTeam", this.get("winner"));
+			this.get("nextRoundMatch").set(this.get("nextRoundMatchSpot") + "Team", this.get("winner"));
 		}
 	}
 });
