@@ -2,14 +2,10 @@ var App = Ember.Application.create();
 
 App.Router.map(function() {
 	this.route("bracketCreation", {path: "/create-bracket"});
-	this.resource("bracket", {path: "/"}, function() {
-		this.resource("round", {path: "/round/:round_id"}, function() {
-			this.resource("match", {path: "/match/:match_id"});
-		});
+	this.resource("bracket", {path: "/matches"}, function() {
+		this.resource("match", {path: "/matches/:match_id"});
 	});
 });
-
-//App.ApplicationAdapter = DS.FixtureAdapter.extend();
 
 App.Team = DS.Model.extend({
 	name: DS.attr("string")
@@ -57,7 +53,7 @@ App.BracketCreationRoute = Ember.Route.extend({
 
 				$("#bracket-creation-modal").modal("hide").on("hidden.bs.modal", function() {
 					//goes to the first round
-					self.transitionTo("round", 1);
+					self.transitionTo("bracket");
 				});
 			});
 		}
@@ -144,14 +140,34 @@ App.BracketCreationController = Ember.Controller.extend({
 	}
 });
 
-App.BracketRoute = Ember.Route.extend();
+App.BracketRoute = Ember.Route.extend({
+	renderTemplate: function() {
+		this.render("bracket", {
+			into: "application"
+		});
+	},
+	model: function() {
+		//TODO find out why is this not this.store.find...
+		return this.store.all("round");
+	},
+	setupController: function(controller, model) {
+		controller.set("content", model);
+	},
+	actions: {
+		play: function(match) {
+			if (match.get("firstTeam") && match.get("secondTeam"))
+				this.transitionTo("match", match);
+		}
+	}
+});
 
-App.BracketController = Ember.Controller.extend({
-	needs: "currentRound",
-	_currentRound: Ember.computed.alias("controllers.currentRound"),
+App.BracketController = Ember.ArrayController.extend({
+	sortProperties: ["id"],
+	sortAscending: true,
+	currentRoundId: 1,
 	currentRound: function() {
-		return Number(this.get("_currentRound.id"));
-	}.property("_currentRound.id"),
+		return this.store.find("round", this.get("currentRoundId"));
+	}.property("currentRoundId"),
 	nextRound: function() {
 		return this.get("currentRound") + 1;
 	}.property("currentRound"),
@@ -164,9 +180,60 @@ App.BracketController = Ember.Controller.extend({
 	isSecondToLastRound: function() {
 		return this.get("currentRound") + 1 == this.get("numRounds");
 	}.property("currentRound"),
+	actions: {
+		nextRound: function() {
+			this.incrementProperty("currentRoundId");
+		},
+		previousRound: function() {
+			this.decrementProperty("currentRoundId");
+		}
+	}
 });
 
-App.RoundRoute = Ember.Route.extend({
+App.BracketView = Ember.View.extend({
+	currentOffset: 0,
+	roundWidth: 0,
+	didInsertElement: function() {
+		var self = this;
+
+		self.set("roundWidth", $(".round").outerWidth());
+
+		$(window).on("load resize orientationchange", function() {
+			self.set("roundWidth", $(".round").outerWidth());
+			self.get("setCurrentRound")(false, self);
+		});
+	},
+	setCurrentRound: function(animate, self) {
+		var newRoundId = self.get("controller").get("currentRoundId"),
+			//TODO investigate off-by-4 pixels bug that is currently compensated for by the +4
+			newOffset = -((newRoundId - 1) * (self.get("roundWidth") + 4))
+			;
+
+		self.set("currentOffset", newOffset);
+
+		$("#bracket").css("left", self.get("currentOffset"));
+	},
+	actions: {
+		nextRound: function() {
+			var controller = this.get("controller");
+
+			if (controller.get("currentRoundId") < controller.get("numRounds") - 1) {
+				controller.send("nextRound");
+				this.get("setCurrentRound")(true, this);
+			}
+		},
+		previousRound: function() {
+			var controller = this.get("controller");
+
+			if (controller.get("currentRoundId") > 1) {
+				controller.send("previousRound");
+				this.get("setCurrentRound")(true, this);
+			}
+		}
+	}
+});
+
+/*App.RoundRoute = Ember.Route.extend({
 	renderTemplate: function() {
 		this.render("round", {
 			into: "bracket",
@@ -206,10 +273,7 @@ App.RoundRoute = Ember.Route.extend({
 				this.transitionTo("match", match);
 		}
 	}
-});
-
-App.CurrentRoundController = Ember.ObjectController.extend();
-App.NextRoundController = Ember.ObjectController.extend();
+});*/
 
 App.BracketMatchController = Ember.ObjectController.extend({
 	isFirstRound: function() {
