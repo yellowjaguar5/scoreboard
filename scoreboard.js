@@ -165,21 +165,12 @@ App.BracketController = Ember.ArrayController.extend({
 	sortProperties: ["id"],
 	sortAscending: true,
 	currentRoundId: 1,
-	currentRound: function() {
-		return this.store.find("round", this.get("currentRoundId"));
-	}.property("currentRoundId"),
-	nextRound: function() {
-		return this.get("currentRound") + 1;
-	}.property("currentRound"),
-	previousRound: function() {
-		return this.get("currentRound") - 1;
-	}.property("currentRound"),
 	isFirstRound: function() {
-		return this.get("currentRound") == 1;
-	}.property("currentRound"),
+		return this.get("currentRoundId") <= 1;
+	}.property("currentRoundId", "numRounds"),
 	isSecondToLastRound: function() {
-		return this.get("currentRound") + 1 == this.get("numRounds");
-	}.property("currentRound"),
+		return this.get("currentRoundId") >= this.get("numRounds") - 1;
+	}.property("currentRoundId", "numRounds"),
 	actions: {
 		nextRound: function() {
 			this.incrementProperty("currentRoundId");
@@ -211,69 +202,23 @@ App.BracketView = Ember.View.extend({
 
 		self.set("currentOffset", newOffset);
 
-		$("#bracket").css("left", self.get("currentOffset"));
+		if (animate) {
+			$("#bracket").animate({left: self.get("currentOffset")});
+		} else {
+			$("#bracket").css("left", self.get("currentOffset"));
+		}
 	},
 	actions: {
 		nextRound: function() {
-			var controller = this.get("controller");
-
-			if (controller.get("currentRoundId") < controller.get("numRounds") - 1) {
-				controller.send("nextRound");
-				this.get("setCurrentRound")(true, this);
-			}
+			this.get("controller").send("nextRound");
+			this.get("setCurrentRound")(true, this);
 		},
 		previousRound: function() {
-			var controller = this.get("controller");
-
-			if (controller.get("currentRoundId") > 1) {
-				controller.send("previousRound");
-				this.get("setCurrentRound")(true, this);
-			}
+			this.get("controller").send("previousRound");
+			this.get("setCurrentRound")(true, this);
 		}
 	}
 });
-
-/*App.RoundRoute = Ember.Route.extend({
-	renderTemplate: function() {
-		this.render("round", {
-			into: "bracket",
-			outlet: "currentRound",
-			controller: "currentRound"
-		});
-
-		this.render("round", {
-			into: "bracket",
-			outlet: "nextRound",
-			controller: "nextRound"
-		});
-	},
-	afterModel: function(round, transition) {
-		if (round.get("id") >= this.controllerFor("bracket").get("numRounds"))
-			this.transitionTo("round", round.get("id") - 1);
-	},
-	model: function(params) {
-		return this.store.find("round", params.round_id);
-	},
-	setupController: function(controller, currentRound) {
-		var self = this;
-
-		self.controllerFor("currentRound").set("model", currentRound);
-
-		//Loads the next round as the nextRound controller's model
-		self.store.find("round", Number(currentRound.get("id")) + 1)
-		.then(function(nextRound) {
-			self.controllerFor("nextRound").set("model", nextRound);
-		}, function(err) {
-			self.controllerFor("nextRound").set("model", null);
-		});
-	},
-	actions: {
-		play: function(match) {
-			if (match.get("firstTeam") && match.get("secondTeam"))
-				this.transitionTo("match", match);
-		}
-	}
-});*/
 
 App.BracketMatchController = Ember.ObjectController.extend({
 	isFirstRound: function() {

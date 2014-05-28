@@ -71,29 +71,35 @@
 		<script data-template-name="bracket" type="text/x-handlebars">
 			<div id="bracket-view" class="col-xs-8">
 				<h1>Bracket:</h1>
-				<button {{action "previousRound" target="view"}}>&lt;-</button>
-				<button {{action "nextRound" target="view"}}>-&gt;</button>
+				{{#unless isFirstRound}}
+					<button {{action "previousRound" target="view"}}>&lt;-</button>
+				{{/unless}}
+				{{#unless isSecondToLastRound}}
+					<button {{action "nextRound" target="view"}}>-&gt;</button>
+				{{/unless}}
+
 				<div id="bracket-container" class="row">
 					<div id="bracket">
 						{{#each round in controller}}
-							<div class="col-xs-6 round">
 							{{render "round" round}}
-							</div>
 						{{/each}}
 					</div>
 				</div>
 			</div>
+
 			<div id="match" class="col-xs-4">
-			{{outlet match}}
+				{{outlet match}}
 			</div>
 		</script>
 
 		<script data-template-name="round" type="text/x-handlebars">
-			{{#if model}}<h3 class="text-center">Round {{id}}</h3>{{/if}}
-			<br>
-			{{#each match in matches}}
-				{{render "bracketMatch" match}}
-			{{/each}}
+			<div class="col-xs-6 round">
+				{{#if model}}<h3 class="text-center">Round {{id}}</h3>{{/if}}
+				<br>
+				{{#each match in matches}}
+					{{render "bracketMatch" match}}
+				{{/each}}
+			</div>
 		</script>
 
 		<script data-template-name="bracketMatch" type="text/x-handlebars">
