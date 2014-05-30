@@ -118,7 +118,15 @@
 			</div>
 
 			<div id="match" class="col-xs-4 col-xs-offset-1">
-				{{outlet match}}
+				<div id="match-header" class="page-header text-center">
+					<h1>Playing</h1>
+				</div>
+				<div id="match-body">
+					{{#unless currentMatch}}
+						<em>To start a match, click on a match in the bracket</em>
+					{{/unless}}
+					{{outlet match}}
+				</div>
 			</div>
 		</script>
 
@@ -167,24 +175,19 @@
 		</script>
 
 		<script data-template-name="match" type="text/x-handlebars">
-			<div id="match-header" class="page-header text-center">
-				<h1>Playing</h1>
+			{{render "matchTeam" firstTeam}}
+			<h3 class="text-center">vs.</h3>
+			{{render "matchTeam" secondTeam}}
+			<div class="row">
+			<div class="col-xs-6 col-xs-offset-3">
+				<button {{action "finalize"}} {{bind-attr class=":btn :btn-block finalized:btn-danger:btn-success" }} {{bind-attr disabled=finalizedOrTie}}>
+					{{#if finalized}}
+					Finalized
+					{{else}}
+					Finalize Score
+					{{/if}}
+				</button>
 			</div>
-			<div id="match-body">
-				{{render "matchTeam" firstTeam}}
-				<h3 class="text-center">vs.</h3>
-				{{render "matchTeam" secondTeam}}
-				<div class="row">
-				<div class="col-xs-6 col-xs-offset-3">
-					<button {{action "finalize"}} {{bind-attr class=":btn :btn-block finalized:btn-danger:btn-success" }} {{bind-attr disabled=finalizedOrTie}}>
-						{{#if finalized}}
-						Finalized
-						{{else}}
-						Finalize Score
-						{{/if}}
-					</button>
-				</div>
-				</div>
 			</div>
 		</script>
 
