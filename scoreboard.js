@@ -88,7 +88,7 @@ App.BracketCreationController = Ember.Controller.extend({
 	numRounds: function() {
 		if (this.get("numRoundsInput") === "")
 			return NaN;
-		
+
 		return Number(this.get("numRoundsInput"));
 	}.property("numRoundsInput"),
 	invalidBracketName: function() {
@@ -101,6 +101,7 @@ App.BracketCreationController = Ember.Controller.extend({
 	invalidForm: function() {
 		return this.get("invalidBracketName") || this.get("invalidNumRounds");
 	}.property("invalidBracketName", "numRounds"),
+	//TODO refactor to be less spaghetti-ish
 	buildBracket: function(numRounds, bonusRoundTeam) {
 		var store = this.store;
 
@@ -182,7 +183,12 @@ App.BracketCreationController = Ember.Controller.extend({
 			.then(function(generatedBracket) {
 				if (bonusRoundTeam) {
 					store.find("round", numRounds)
-					.then(function(finalRoundObj) {
+					.then(function(finalRound) {
+						return new Ember.RSVP.Promise(function(resolve, reject) {
+							resolve(finalRound.get("matches").objectAt(0));
+						});
+					})
+					.then(function(finalMatch) {
 						var bonusRound = store.push("round", {
 							id: "bonus"
 						});
@@ -202,8 +208,8 @@ App.BracketCreationController = Ember.Controller.extend({
 							name: bonusRoundTeam
 						}));
 
-						finalRoundObj.set("nextRoundMatch", bonusMatch);
-						finalRoundObj.set("nextRoundMatchSpot", "second");
+						finalMatch.set("nextRoundMatch", bonusMatch);
+						finalMatch.set("nextRoundMatchSpot", "second");
 					});
 				}
 
