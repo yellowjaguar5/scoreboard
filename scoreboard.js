@@ -1,12 +1,5 @@
 var App = Ember.Application.create();
 
-App.Router.map(function() {
-	this.route("bracketCreation", {path: "/create-bracket"});
-	this.resource("bracket", {path: "/matches"}, function() {
-		this.resource("match", {path: "/matches/:match_id"});
-	});
-});
-
 App.Team = DS.Model.extend({
 	name: DS.attr("string")
 });
@@ -38,10 +31,21 @@ App.Round = DS.Model.extend({
 	matches: DS.hasMany("match")
 });
 
+App.Router.map(function() {
+	this.route("bracketCreation", {path: "/create-bracket"});
+	this.resource("bracket", {path: "/matches"}, function() {
+		this.resource("match", {path: "/matches/:match_id"});
+	});
+});
+
 App.ApplicationRoute = Ember.Route.extend({
 	beforeModel: function() {
 		this.transitionTo("bracketCreation");
 	}
+});
+
+App.ApplicationView = Ember.View.extend({
+	classNames: ["container"]
 });
 
 App.BracketCreationRoute = Ember.Route.extend({
@@ -49,7 +53,8 @@ App.BracketCreationRoute = Ember.Route.extend({
 		createBracket: function() {
 			var self = this;
 			//TODO add form validation
-			var numRounds = Number(this.controller.get("numRounds"));
+			var bracketName = this.controller.get("bracketName");
+			var numRounds = this.controller.get("numRounds");
 
 			var isBonusRound = this.controller.get("bonusRound");
 			var bonusRoundTeam = null;
@@ -57,12 +62,13 @@ App.BracketCreationRoute = Ember.Route.extend({
 			if (isBonusRound)
 				bonusRoundTeam = this.controller.get("bonusTeamName");
 
-			//TODO figure out better structure for bracket generation
+			//TODO figure out better structure for bracket generation code
 			self.controller.buildBracket(numRounds, bonusRoundTeam)
 			.then(function() {
 				self.controllerFor("bracket").set("numRounds", isBonusRound ? 
 																numRounds + 1 : 
 																numRounds);
+				self.controllerFor("bracket").set("name", bracketName);
 
 				$("#bracket-creation-modal").modal("hide").on("hidden.bs.modal", function() {
 					self.transitionTo("bracket");
@@ -73,6 +79,28 @@ App.BracketCreationRoute = Ember.Route.extend({
 });
 
 App.BracketCreationController = Ember.Controller.extend({
+	numTeams: function() {
+		if (false)
+			return 0;
+
+		return Math.pow(2, Number(this.get("numRounds")));
+	}.property("numRounds"),
+	numRounds: function() {
+		if (this.get("numRoundsInput") === "")
+			return NaN;
+		
+		return Number(this.get("numRoundsInput"));
+	}.property("numRoundsInput"),
+	invalidBracketName: function() {
+		return !this.get("bracketName") || this.get("bracketName") === "";
+	}.property("bracketName"),
+	invalidNumRounds: function() {
+		console.log(this.get("numRounds"));
+		return isNaN(this.get("numRounds"));
+	}.property("numRounds"),
+	invalidForm: function() {
+		return this.get("invalidBracketName") || this.get("invalidNumRounds");
+	}.property("invalidBracketName", "numRounds"),
 	buildBracket: function(numRounds, bonusRoundTeam) {
 		var store = this.store;
 
@@ -207,8 +235,10 @@ App.BracketRoute = Ember.Route.extend({
 	},
 	actions: {
 		play: function(match) {
-			if (match.get("firstTeam.team") && match.get("secondTeam.team"))
+			if (match.get("firstTeam.team") && match.get("secondTeam.team")) {
+				this.set("controller.currentMatch", match.get("id"));
 				this.transitionTo("match", match);
+			}
 		}
 	}
 });
@@ -216,19 +246,20 @@ App.BracketRoute = Ember.Route.extend({
 App.BracketController = Ember.ArrayController.extend({
 	sortProperties: ["id"],
 	sortAscending: true,
-	currentRoundId: 1,
+	currentRound: 1,
+	currentMatch: null,
 	isFirstRound: function() {
-		return this.get("currentRoundId") <= 1;
-	}.property("currentRoundId", "numRounds"),
+		return this.get("currentRound") <= 1;
+	}.property("currentRound", "numRounds"),
 	isSecondToLastRound: function() {
-		return this.get("currentRoundId") >= this.get("numRounds") - 1;
-	}.property("currentRoundId", "numRounds"),
+		return this.get("currentRound") >= this.get("numRounds") - 1;
+	}.property("currentRound", "numRounds"),
 	actions: {
 		nextRound: function() {
-			this.incrementProperty("currentRoundId");
+			this.incrementProperty("currentRound");
 		},
 		previousRound: function() {
-			this.decrementProperty("currentRoundId");
+			this.decrementProperty("currentRound");
 		}
 	}
 });
@@ -248,7 +279,7 @@ App.BracketView = Ember.View.extend({
 	},
 	setCurrentRound: function(animate, self) {
 		var bracket = $("#bracket"),
-			newRoundId = self.get("controller").get("currentRoundId"),
+			newRoundId = self.get("controller").get("currentRound"),
 			//TODO investigate off-by-4 pixels bug that is currently compensated for by the +4
 			newOffset = -((newRoundId - 1) * (self.get("roundWidth") + 4))
 			;
@@ -289,9 +320,21 @@ App.RoundController = Ember.ObjectController.extend({
 });
 
 App.BracketMatchController = Ember.ObjectController.extend({
+	needs: "bracket",
 	isFirstRound: function() {
 		return this.get("round.id") == 1;
-	}.property("round.id")
+	}.property("round.id"),
+	isActive: function() {
+		return this.get("controllers.bracket.currentMatch") === this.get("id");
+	}.property("controllers.bracket.currentMatch")
+});
+
+App.BracketMatchView = Ember.View.extend({
+	classNames: ["row", "bracket-match"],
+	classNameBindings: ["isActive:active"],
+	isActive: function() {
+		return this.get("controller.isActive");
+	}.property("controller.isActive")
 });
 
 App.BracketMatchTeamController = Ember.ObjectController.extend({
@@ -307,6 +350,15 @@ App.BracketMatchTeamController = Ember.ObjectController.extend({
 			this.set("editing", !this.get("editing"));
 		}
 	}
+});
+
+App.BracketMatchTeamView = Ember.View.extend({
+	tagName: "li",
+	classNames: ["list-group-item"],
+	classNameBindings: ["teamWon:list-group-item-success"],
+	teamWon: function() {
+		return this.get("controller.teamWon");
+	}.property("controller.teamWon")
 });
 
 App.MatchRoute = Ember.Route.extend({
@@ -344,7 +396,8 @@ App.MatchTeamController = Ember.ObjectController.extend({
 		return this.get("controllers.match.finalized");
 	}.property("controllers.match.finalized"),
 	finalizedOrScoreIsZero: function() {
-		return this.get("score") === 0 || this.get(".finalized");
+		console.log(this.get("score") === 0);
+		return this.get("score") === 0 || this.get("finalized");
 	}.property("score", "finalized"),
 	actions: {
 		incrementScore: function() {

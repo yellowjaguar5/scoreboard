@@ -1,9 +1,11 @@
-.editTeamNameToggle {
-	font-size: 8pt;
+button {
+	outline: none;
+	outline-width: 0;
 }
 
 #bracket-container {
-	overflow: hidden;
+	overflow-x: hidden;
+	overflow-y: scroll;
 	white-space: nowrap;
 }
 
@@ -29,4 +31,27 @@
 .round {
 	float: none;
 	display: inline-block;
+}
+
+.editTeamNameToggle {
+	font-size: 8pt;
+	margin-right: 5px;
+}
+
+#match-header {
+	/* currently hardcoded to line up with Bracket header */
+	margin-top: 63px;
+}
+
+.team-name {
+	font-size: 16pt;
+	font-weight: bold;
+}
+
+.score {
+	padding-right: 5px;
+}
+
+.score-control {
+	padding: 0px;
 }

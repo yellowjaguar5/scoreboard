@@ -8,75 +8,105 @@
 	</head>
 	<body>
 		<script data-template-name="application" type="text/x-handlebars">
-			<div class="container">
-				<div class="row">
-					{{outlet}}
-				</div>
+			<div id="app-container" class="row">
+				{{outlet}}
 			</div>
 		</script>
 
 		<script data-template-name="bracketCreation" type="text/x-handlebars">
 			<div id="bracket-creation-modal" class="modal fade" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
-			  <div class="modal-dialog">
-			    <div class="modal-content">
-			      <div class="modal-header">
-			        <h4 class="modal-title">Configure Bracket</h4>
-			      </div>
-			      	<form {{action "createBracket" on="submit"}}>
+				<div class="modal-dialog">
+					<div class="modal-content">
+					    <div class="modal-header">
+					        <h4 class="modal-title">Configure New Bracket</h4>
+					    </div>
 					    <div class="modal-body">
-					      	
-					      	<div class="form-group">
-					        	<label for="numRounds">Number of Rounds</label>
-					        	<div>
-					        	{{input type="text"
-					        			name="numRounds"
-					        			value=numRounds
-					        			class="form-control"}}
+					    	<div class="form-horizontal">
+					    		<div {{bind-attr class=":form-group invalidBracketName:has-error"}}>
+					    			<div class="col-xs-12">
+							        	<label for="bracketName" class="control-label">Bracket Name</label>
+							        	{{input type="text"
+							        			name="bracketName"
+							        			value=bracketName
+							        			class="form-control"}}
+						        	</div>
+						      	</div>
+
+						      	<div {{bind-attr class=":form-group invalidNumRounds:has-error"}}>
+						      		<div class="col-xs-4">
+						        	<label for="numRounds" class="control-label">Number of Rounds</label>
+						        	{{input type="text"
+						        			name="numRounds"
+						        			value=numRoundsInput
+						        			class="form-control"}}
+						        	</div>
+						        	<div class="col-xs-4">
+						        		<label for="numRounds" class="control-label">Number of Teams</label>
+						        		<p class="form-control-static">
+						        			{{#if invalidNumRounds}}
+						        				<em>Invalid Number of Rounds</em>
+						        			{{else}}
+						        				{{numTeams}}
+						        			{{/if}}
+						        		</p>
+						        	</div>
 					        	</div>
-					        </div>
 
 					        <div class="form-group">
-					        	<div class="checkbox">
-					        		<label>
-					        			Include Bonus Round
-					        			{{input type="checkbox"
-						        			name="bonusRoundToggle"
-						        			checked=bonusRound
-						        			}}
-						        	</label>
+					        	<div class="col-xs-12">
+						        	<div class="checkbox">
+						        		<label>
+						        			Include Bonus Round
+						        			{{input type="checkbox"
+							        			name="bonusRoundToggle"
+							        			checked=bonusRound
+							        			}}
+							        	</label>
+							        </div>
 					        	</div>
 					        </div>
 
 					        {{#if bonusRound}}
-						        <div class="form-group">
-						        	<label for="bonusTeamName" class="">Bonus Round Team Name</label>
-						        	<div>
+					        <div class="form-group">
+					        	<div class="col-xs-12">
+						        	<label for="bonusTeamName" class="control-label">Bonus Round Team Name</label>
 						        	{{input type="text"
 						        			name="bonusTeamName"
 						        			value=bonusTeamName
 						        			class="form-control"}}
-						        	</div>
-						      	</div>
+					        	</div>
+					      	</div>
 					      	{{/if}}
 					    </div>
+
 					    <div class="modal-footer">
-							<button type="submit" class="btn btn-primary">Create Bracket</button>
+							<button class="btn btn-primary" {{action "createBracket"}} {{bind-attr disabled="invalidForm"}}>Create Bracket</button>
 					    </div>
-				    </form>
-			    </div>
-			  </div>
+					</div>
+				</div>
 			</div>
 		</script>
 
 		<script data-template-name="bracket" type="text/x-handlebars">
-			<div id="bracket-view" class="col-xs-8">
-				<h1>Bracket:</h1>
-				{{#unless isFirstRound}}
-					<button {{action "previousRound" target="view"}}>&lt;-</button>
-				{{/unless}}
-				{{#unless isSecondToLastRound}}
-					<button {{action "nextRound" target="view"}}>-&gt;</button>
-				{{/unless}}
+			<div id="bracket-view" class="col-xs-7">
+				<div class="page-header">
+					<div class="row">
+						<div class="col-xs-2 text-left">
+							{{#unless isFirstRound}}
+								<a class="btn btn-link" {{action "previousRound" target="view"}}><h3><span class="glyphicon glyphicon-chevron-left"></span></h3></a>
+							{{/unless}}
+						</div>
+						<div class="col-xs-8 text-center">
+						<h1>{{name}}</h1>
+						</div>
+						<div class="col-xs-2 text-right">
+						{{#unless isSecondToLastRound}}
+							<a class="btn btn-link" {{action "nextRound" target="view"}}><h3><span class="glyphicon glyphicon-chevron-right"></span></h3></a>
+						{{/unless}}
+						</div>
+					</div>
+				</div>
+				
 
 				<div id="bracket-container" class="row">
 					<div id="bracket">
@@ -87,7 +117,7 @@
 				</div>
 			</div>
 
-			<div id="match" class="col-xs-4">
+			<div id="match" class="col-xs-4 col-xs-offset-1">
 				{{outlet match}}
 			</div>
 		</script>
@@ -109,7 +139,6 @@
 		</script>
 
 		<script data-template-name="bracketMatch" type="text/x-handlebars">
-			<div class="row">
 			<div class="col-xs-12">
 			<div class="panel panel-default" {{action "play" model}}>
 				<ul class="list-group">
@@ -118,42 +147,62 @@
 				</ul>
 			</div>
 			</div>
-			</div>
 		</script>
 
 		<script data-template-name="bracketMatchTeam" type="text/x-handlebars">
-			<li {{bind-attr class=":list-group-item teamWon:list-group-item-success"}}>
-				{{#if editing}}
-					<a class="editTeamNameToggle" {{action "toggleEditing"}}><span class="glyphicon glyphicon-ok"></span></a>
-					{{input type="text" value=team.name}}
-				{{else}}
-					{{#if isFirstRound}}
-						<a class="editTeamNameToggle" {{action "toggleEditing"}}><span class="glyphicon glyphicon-pencil"></span></a>
-					{{/if}}
-					{{#if team}} 
-						<strong>{{team.name}}</strong>
-					{{else}}
-						<em>Undecided</em>
-					{{/if}}
+			{{#if editing}}
+				<a class="editTeamNameToggle" {{action "toggleEditing"}}><span class="glyphicon glyphicon-ok"></span></a>
+				{{input type="text" value=team.name}}
+			{{else}}
+				{{#if isFirstRound}}
+					<a class="editTeamNameToggle" {{action "toggleEditing"}}><span class="glyphicon glyphicon-pencil"></span></a>
 				{{/if}}
-				<span class="badge">{{score}}</span>
-			</li>
+				{{#if team}} 
+					<strong>{{team.name}}</strong>
+				{{else}}
+					<em>Undecided</em>
+				{{/if}}
+			{{/if}}
+			<span class="badge">{{score}}</span>
 		</script>
 
 		<script data-template-name="match" type="text/x-handlebars">
-			<h1>Current Match</h1>
-			{{render "matchTeam" firstTeam}}
-			<p>vs.</p>
-			{{render "matchTeam" secondTeam}}
-			<p>winner: {{winner.name}}</p>
-			<button {{action "finalize"}} {{bind-attr disabled=finalizedOrTie}}>Finalize {{finalized}}</button>
+			<div id="match-header" class="page-header text-center">
+				<h1>Playing</h1>
+			</div>
+			<div id="match-body">
+				{{render "matchTeam" firstTeam}}
+				<h3 class="text-center">vs.</h3>
+				{{render "matchTeam" secondTeam}}
+				<div class="row">
+				<div class="col-xs-6 col-xs-offset-3">
+					<button {{action "finalize"}} {{bind-attr class=":btn :btn-block finalized:btn-danger:btn-success" }} {{bind-attr disabled=finalizedOrTie}}>
+						{{#if finalized}}
+						Finalized
+						{{else}}
+						Finalize Score
+						{{/if}}
+					</button>
+				</div>
+				</div>
+			</div>
 		</script>
 
 		<script data-template-name="matchTeam" type="text/x-handlebars">
-			<p>{{team.name}} - {{score}}
-				<button {{action "incrementScore"}} {{bind-attr disabled=finalized}}>+</button>
-				<button {{action "decrementScore"}} {{bind-attr disabled=finalizedOrScoreIsZero}}>-</button>
-			</p>
+			<div class="panel panel-default">
+				<div class="panel-body">
+					<div class="row">
+						<div class="col-xs-7"><span class="team-name">{{team.name}}</span>
+						</div>
+						<div class="col-xs-5 text-right">
+							<span class="lead score">{{score}}</span>
+						
+							<a {{action "incrementScore"}} {{bind-attr class=":btn :btn-link :score-control finalized:disabled"}} {{bind-attr disabled=finalized}}><span class="glyphicon glyphicon-chevron-up"></span></a>
+							<a {{action "decrementScore"}} {{bind-attr class=":btn :btn-link :score-control finalizedOrScoreIsZero:disabled"}} {{bind-attr disabled=finalizedOrScoreIsZero}}><span class="glyphicon glyphicon-chevron-down"></span></a>
+						</div>
+					</div>
+				</div>
+			</div>
 		</script>
 
 		<script type="text/javascript" src="./lib/jquery-1.11.0.js"></script>
