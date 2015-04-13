@@ -18,13 +18,13 @@
 				<div class="modal-dialog">
 					<div class="modal-content">
 					    <div class="modal-header">
-					        <h4 class="modal-title">Configure New Bracket</h4>
+					        <h4 class="modal-title">Configure New Competition</h4>
 					    </div>
 					    <div class="modal-body">
 					    	<div class="form-horizontal">
 					    		<div {{bind-attr class=":form-group invalidBracketName:has-error"}}>
 					    			<div class="col-xs-12">
-							        	<label for="bracketName" class="control-label">Bracket Name</label>
+							        	<label for="bracketName" class="control-label">Competition Name</label>
 							        	{{input type="text"
 							        			name="bracketName"
 							        			value=bracketName
@@ -80,7 +80,7 @@
 					    </div>
 
 					    <div class="modal-footer">
-							<button class="btn btn-primary" {{action "createBracket"}} {{bind-attr disabled="invalidForm"}}>Create Bracket</button>
+							<button class="btn btn-primary" {{action "createBracket"}} {{bind-attr disabled="invalidForm"}}>Create Competition</button>
 					    </div>
 					</div>
 				</div>
